@@ -97,7 +97,7 @@ class ImageHandler:
 		self.filenames = []
 		self.images = []
 
-	def loadFile(self, filename):
+	def loadImage(self, filename):
 		self.current_file = filename
 		self.loadFilenames()
 		self.stripNonImageFileNames()
@@ -191,17 +191,20 @@ class ImageViewer:
 		self.window.protocol("WM_DELETE_WINDOW", self.exit)
 
 	def leftButtonPressEvent(self, event):
-		self.down_x = event.x
-		self.down_y = event.y
+		# print('press at (',event.x,',',event.y,')')
+		(mouse_x, mouse_y) = self.absoluteMouseCoordinates()
+		self.down_x = mouse_x
+		self.down_y = mouse_y
 
 	def leftButtonReleaseEvent(self, event):
-		offset_x = event.x - self.down_x
-		offset_y = event.y - self.down_y
-		print('release')
-		print('offset_x = ', offset_x)
-		print('offset_y = ', offset_y)
+		(mouse_x, mouse_y) = self.absoluteMouseCoordinates()
+		offset_x = mouse_x - self.down_x
+		offset_y = mouse_y - self.down_y
+		# print('release')
+		# print('offset_x = ', offset_x)
+		# print('offset_y = ', offset_y)
 		self.image_x = self.image_x + offset_x
-		self.image_y = self.image_y + 0
+		self.image_y = self.image_y + offset_y
 
 		self.down_x = None
 		self.down_y = None
@@ -211,18 +214,27 @@ class ImageViewer:
 	def mouseMoveEvent(self, event):
 		if (not self.down_x):
 			return
-		offset_x = event.x - self.down_x
-		offset_y = event.y - self.down_y
-		print('move')
-		print('offset_x = ', offset_x)
-		print('offset_y = ', offset_y)
-		self.image_x = self.image_x + offset_x
-		self.image_y = self.image_y + 0
 
-		self.down_x = event.x
-		self.down_y = event.y
+		(mouse_x, mouse_y) = self.absoluteMouseCoordinates()
+
+		# print('down_x = ',self.down_x)
+		offset_x = mouse_x - self.down_x
+		offset_y = mouse_y - self.down_y
+		# print('move')
+		# print('offset_x = ', offset_x)
+		# print('offset_y = ', offset_y)
+		self.image_x = self.image_x + offset_x
+		self.image_y = self.image_y + offset_y
+
+		self.down_x = mouse_x
+		self.down_y = mouse_y
 
 		self.refreshWindow()
+
+	def absoluteMouseCoordinates(self):
+		x = self.window.winfo_pointerx() - self.window.winfo_rootx()
+		y = self.window.winfo_pointery() - self.window.winfo_rooty()
+		return (x, y)
 
 	def exit(self):
 		print('Exiting')
@@ -256,7 +268,7 @@ class ImageViewer:
 
 	def openImage(self, filename):
 		print('opening', filename)
-		self.image_handler.loadFile(filename)
+		self.image_handler.loadImage(filename)
 		self.image = Image.open(filename)
 		self.window.title(self.image_handler.getFilename())
 		# self.config.last_opened_file = filename
